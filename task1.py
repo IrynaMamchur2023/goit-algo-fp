@@ -3,6 +3,7 @@ class Node:
         self.data = data
         self.next = None
 
+
 class LinkedList:
     def __init__(self):
         self.head = None
@@ -137,11 +138,11 @@ class LinkedList:
 if __name__ == '__main__':
     first_list = LinkedList()
 
-    first_list.insert_at_beginning(5)
-    first_list.insert_at_beginning(30)
-    first_list.insert_at_beginning(15)
-    first_list.insert_at_end(10)
-    first_list.insert_at_end(25)
+    first_list.insert_at_beginning(2)
+    first_list.insert_at_beginning(3)
+    first_list.insert_at_beginning(4)
+    first_list.insert_at_end(6)
+    first_list.insert_at_end(55)
     print("Зв'язний список:")
     first_list.print_list()
 
@@ -154,11 +155,11 @@ if __name__ == '__main__':
     first_list.print_list()
 
     second_list = LinkedList()
+    second_list.insert_at_beginning(1)
     second_list.insert_at_beginning(2)
-    second_list.insert_at_beginning(20)
-    second_list.insert_at_beginning(18)
+    second_list.insert_at_beginning(4)
 
     second_list.head = second_list.merge_sort(second_list.head)  
-    first_list.merge_sorted_lists(first_list.head, second_list.head)
+    first_list.head = first_list.merge_sorted_lists(first_list.head, second_list.head) 
     print("Зв'язний список відсортовано та замерджено:")
     first_list.print_list()
