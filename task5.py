@@ -1,6 +1,8 @@
 import uuid
 import networkx as nx
 import matplotlib.pyplot as plt
+import heapq
+
 
 class Node:
     def __init__(self, key, color="skyblue"):
@@ -17,69 +19,94 @@ def add_edges(graph, node, pos, x=0, y=0, layer=1):
             graph.add_edge(node.id, node.left.id)
             l = x - 1 / 2 ** layer
             pos[node.left.id] = (l, y - 1)
-            l = add_edges(graph, node.left, pos, x=l, y=y - 1, layer=layer + 1)
+            add_edges(graph, node.left, pos, x=l, y=y - 1, layer=layer + 1)
         if node.right:
             graph.add_edge(node.id, node.right.id)
             r = x + 1 / 2 ** layer
             pos[node.right.id] = (r, y - 1)
-            r = add_edges(graph, node.right, pos, x=r, y=y - 1, layer=layer + 1)
+            add_edges(graph, node.right, pos, x=r, y=y - 1, layer=layer + 1)
     return graph
 
-def draw_tree(tree_root, node_colors):
+def draw_tree(tree_root, colors):
     tree = nx.DiGraph()
     pos = {tree_root.id: (0, 0)}
     tree = add_edges(tree, tree_root, pos)
 
-    colors = []
-    for node_id in tree.nodes():
-        if node_id in node_colors:
-            colors.append(node_colors[node_id])
-        else:
-            colors.append("skyblue")  
-
-    labels = {node_id: data['label'] for node_id, data in tree.nodes(data=True)}
+    node_colors = [colors.get(node, 'skyblue') for node in tree.nodes()]
+    labels = {node[0]: node[1]['label'] for node in tree.nodes(data=True)}
 
     plt.figure(figsize=(8, 5))
-    nx.draw(tree, pos=pos, labels=labels, arrows=False, node_size=2500, node_color=colors)
+    nx.draw(tree, pos=pos, labels=labels, arrows=False, node_size=2500, node_color=node_colors)
     plt.show()
 
-def DFS(node, depth=0, node_colors=None):
-    if node_colors is None:
-        node_colors = {}
-    if node:
-        if node.id not in node_colors:
-            color = '#{:02x}{:02x}{:02x}'.format(20 + depth * 10, 20 + depth * 10, 200)
-            node_colors[node.id] = color
-            draw_tree(node, node_colors)
-            DFS(node.left, depth + 1, node_colors)
-            DFS(node.right, depth + 1, node_colors)
-        else:
-            pass 
 
-def BFS(node):
-    if node is None:
-        return
-    queue = [(node, 0)]
-    node_colors = {}
+def build_heap_tree(heap, index=0):
+    if index < len(heap):
+        node = Node(heap[index])
+        node.left = build_heap_tree(heap, 2 * index + 1)
+        node.right = build_heap_tree(heap, 2 * index + 2)
+        return node
+    return None
+
+
+def dfs_visualize(root, total_steps):
+    visited = set()
+    stack = [root]
+    colors = {}
+    step = 0
+
+    while stack:
+        node = stack.pop()
+        if node is None or node in visited:
+            continue
+        visited.add(node)
+        colors[node.id] = generate_color(step, total_steps)
+        step += 1
+        stack.extend([node.right, node.left])
+
+    return colors
+
+
+def bfs_visualize(root, total_steps=1):
+    visited, queue = set(), [root]
+    colors = {}
+    step = 0
+
     while queue:
-        current_node, depth = queue.pop(0)
-        if depth not in node_colors:
-            node_colors[depth] = {}
-        if current_node.id not in node_colors[depth]:
-            color = '#{:02x}{:02x}{:02x}'.format(20 + depth * 10, 20 + depth * 10, 200)
-            node_colors[depth][current_node.id] = color
-            draw_tree(current_node, node_colors[depth])
-            if current_node.left:
-                queue.append((current_node.left, depth + 1))
-            if current_node.right:
-                queue.append((current_node.right, depth + 1))
+        node = queue.pop(0)
+        if node is None or node in visited:
+            continue
+        visited.add(node)
+        colors[node.id] = generate_color(step, total_steps)
+        step += 1
+        queue.extend([node.left, node.right])
 
-root = Node(0)
-root.left = Node(4)
-root.left.left = Node(5)
-root.left.right = Node(10)
-root.right = Node(1)
-root.right.left = Node(3)
+    return colors
 
-DFS(root)
-BFS(root)
+
+def generate_color(step, total_steps):
+    base_color = [135, 206, 250]
+    darken_factor = step / total_steps
+    new_color = [int(c * darken_factor) for c in base_color]
+    return f'#{new_color[0]:02x}{new_color[1]:02x}{new_color[2]:02x}'
+
+
+def count_nodes(node):
+    if node is None:
+        return 0
+    return 1 + count_nodes(node.left) + count_nodes(node.right)
+
+
+if __name__ == '__main__':
+    heap_list = [1, 3, 5, 7, 9, 2, 4, 34, 2, 1, 2]
+    heapq.heapify(heap_list)
+  
+    heap_tree_root = build_heap_tree(heap_list)
+
+    total_steps = count_nodes(heap_tree_root)
+
+    dfs_colors = dfs_visualize(heap_tree_root, total_steps)
+    draw_tree(heap_tree_root, dfs_colors)
+
+    bfs_colors = bfs_visualize(heap_tree_root, total_steps)
+    draw_tree(heap_tree_root, bfs_colors)

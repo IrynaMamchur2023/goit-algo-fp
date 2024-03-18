@@ -1,75 +1,164 @@
-class ListNode:
-    def __init__(self, val=0, next=None):
-        self.val = val
-        self.next = next
+class Node:
+    def __init__(self, data=None):
+        self.data = data
+        self.next = None
 
-def reverse_linked_list(head):
-    prev_node = None
-    curr_node = head
+class LinkedList:
+    def __init__(self):
+        self.head = None
 
-    while curr_node:
-        next_node = curr_node.next
-        curr_node.next = prev_node
-        prev_node = curr_node
-        curr_node = next_node
+    def insert_at_beginning(self, data):
+        new_node = Node(data)
+        new_node.next = self.head
+        self.head = new_node
 
-    return prev_node 
-
-def insertion_sort_linked_list(head):
-    if not head or not head.next:
-        return head
-
-    dummy = ListNode(float("-inf"))
-    dummy.next = head
-    last_sorted = head
-
-    while last_sorted.next:
-        if last_sorted.next.val < last_sorted.val:
-            prev = dummy
-
-            while prev.next.val < last_sorted.next.val:
-                prev = prev.next
-
-            temp = last_sorted.next
-            last_sorted.next = temp.next
-            temp.next = prev.next
-            prev.next = temp
+    def insert_at_end(self, data):
+        new_node = Node(data)
+        if self.head is None:
+            self.head = new_node
         else:
-            last_sorted = last_sorted.next
+            cur = self.head
+            while cur.next:
+                cur = cur.next
+            cur.next = new_node
 
-    return dummy.next
-def merge_two_sorted_lists(l1, l2):
-    dummy = ListNode(float("-inf"))
-    current = dummy
+    def insert_after(self, prev_node: Node, data):
+        if prev_node is None:
+            print("Попереднього вузла не існує.")
+            return
+        new_node = Node(data)
+        new_node.next = prev_node.next
+        prev_node.next = new_node
 
-    while l1 and l2:
-        if l1.val < l2.val:
-            current.next = l1
-            l1 = l1.next
+    def delete_node(self, key: int):
+        cur = self.head
+        if cur and cur.data == key:
+            self.head = cur.next
+            cur = None
+            return
+        prev = None
+        while cur and cur.data != key:
+            prev = cur
+            cur = cur.next
+        if cur is None:
+            return
+        prev.next = cur.next
+        cur = None
+
+    def search_element(self, data: int) -> Node | None:
+        cur = self.head
+        while cur:
+            if cur.data == data:
+                return cur
+            cur = cur.next
+        return None
+
+    def print_list(self):
+        current = self.head
+        while current:
+            print(current.data, "-->", end="")
+            current = current.next
+        print('None')
+
+    def reverse(self):
+        prev = None
+        current = self.head
+        while current:
+            next_node = current.next
+            current.next = prev
+            prev = current
+            current = next_node
+        self.head = prev
+
+    def merge_sort(self, head):
+        if head is None or head.next is None:
+            return head
+
+        middle = self.get_middle(head)
+        next_to_middle = middle.next
+        middle.next = None
+
+        left = self.merge_sort(head)
+        right = self.merge_sort(next_to_middle)
+
+        sorted_list = self.sorted_merge(left, right)
+        return sorted_list
+
+    def get_middle(self, head):
+        if head is None:
+            return head
+
+        slow = head
+        fast = head
+
+        while fast.next and fast.next.next:
+            slow = slow.next
+            fast = fast.next.next
+
+        return slow
+
+    def sorted_merge(self, a, b):
+        result = None
+
+        if a is None:
+            return b
+        if b is None:
+            return a
+
+        if a.data <= b.data:
+            result = a
+            result.next = self.sorted_merge(a.next, b)
         else:
-            current.next = l2
-            l2 = l2.next
+            result = b
+            result.next = self.sorted_merge(a, b.next)
 
-        current = current.next
+        return result
 
-    current.next = l1 if l1 else l2
+    def merge_sorted_lists(self, list1_head, list2_head):
+        dummy = Node()
+        tail = dummy
 
-    return dummy.next
+        while list1_head and list2_head:
+            if list1_head.data < list2_head.data:
+                tail.next = list1_head
+                list1_head = list1_head.next
+            else:
+                tail.next = list2_head
+                list2_head = list2_head.next
+            tail = tail.next
 
-node1 = ListNode(1)
-node2 = ListNode(2)
-node3 = ListNode(4)
+        if list1_head:
+            tail.next = list1_head
+        if list2_head:
+            tail.next = list2_head
 
-node1.next = node2
-node2.next = node3
+        return dummy.next
 
+if __name__ == '__main__':
+    first_list = LinkedList()
 
-reversed_head = reverse_linked_list(node1)
+    first_list.insert_at_beginning(5)
+    first_list.insert_at_beginning(30)
+    first_list.insert_at_beginning(15)
+    first_list.insert_at_end(10)
+    first_list.insert_at_end(25)
+    print("Зв'язний список:")
+    first_list.print_list()
 
+    first_list.reverse()
+    print("Зв'язний список після реверсування :")
+    first_list.print_list()
 
-sorted_head = insertion_sort_linked_list(reversed_head)
+    first_list.head = first_list.merge_sort(first_list.head)
+    print("Зв'язний список відсортовано:")
+    first_list.print_list()
 
+    second_list = LinkedList()
+    second_list.insert_at_beginning(2)
+    second_list.insert_at_beginning(20)
+    second_list.insert_at_beginning(18)
 
-while sorted_head:
-    print(sorted_head.val)
-    sorted_head = sorted_head.next
+    second_list.head = second_list.merge_sort(second_list.head)  
+    first_list.merge_sorted_lists(first_list.head, second_list.head)
+    print("Зв'язний список відсортовано та замерджено:")
+    first_list.print_list()
